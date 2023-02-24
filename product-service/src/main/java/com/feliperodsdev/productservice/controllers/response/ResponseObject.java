@@ -5,9 +5,9 @@ import org.springframework.http.HttpStatus;
 public class ResponseObject <T> {
 
     private T data;
-    private HttpStatus statusCode;
+    private int statusCode;
 
-    public ResponseObject(T data, HttpStatus statusCode) {
+    public ResponseObject(T data, int statusCode) {
         this.data = data;
         this.statusCode = statusCode;
     }
@@ -20,11 +20,11 @@ public class ResponseObject <T> {
         this.data = data;
     }
 
-    public HttpStatus getStatusCode() {
+    public int getStatusCode() {
         return statusCode;
     }
 
-    public void setStatusCode(HttpStatus statusCode) {
+    public void setStatusCode(int statusCode) {
         this.statusCode = statusCode;
     }
 
