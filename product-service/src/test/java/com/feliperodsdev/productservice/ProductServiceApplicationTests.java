@@ -1,7 +1,10 @@
 package com.feliperodsdev.productservice;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.feliperodsdev.productservice.dtos.CreateProductDto;
+import com.feliperodsdev.productservice.model.Product;
 import com.feliperodsdev.productservice.repositories.ProductRepositoryImpl;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,6 +20,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -50,6 +54,24 @@ public class ProductServiceApplicationTests {
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(productRequestString))
 				.andExpect(status().isCreated());
+		Assertions.assertEquals(3, productRepository.getAllProducts().size());
+	}
+
+	@Test
+	void should_return_products() throws Exception {
+		CreateProductDto productRequest = getProductDto();
+		String productRequestString = objectMapper.writeValueAsString(productRequest);
+		mockMvc.perform(MockMvcRequestBuilders.post("/product/create")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(productRequestString));
+		mockMvc.perform(MockMvcRequestBuilders.post("/product/create")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(productRequestString));
+		mockMvc.perform(MockMvcRequestBuilders.get("/product"))
+				.andExpect(status().is(200));
+		List<Product> productList = productRepository.getAllProducts();
+		Assertions.assertEquals(2, productList.size());
+		Assertions.assertEquals("Macbook M1", productList.get(0).getName());
 	}
 
 	private CreateProductDto getProductDto(){
