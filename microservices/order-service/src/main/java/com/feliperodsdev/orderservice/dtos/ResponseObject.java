@@ -10,6 +10,8 @@ public class ResponseObject <T> {
         this.statusCode = statusCode;
     }
 
+    public ResponseObject(){}
+
     public T getData() {
         return data;
     }

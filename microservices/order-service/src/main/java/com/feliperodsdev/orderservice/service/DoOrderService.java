@@ -16,9 +16,11 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("ALL")
 @Service
 public class DoOrderService {
 
+    @Autowired
     private ObjectMapper objectMapper;
     @Autowired
     private final WebClient webClient;
@@ -43,25 +45,28 @@ public class DoOrderService {
         order.setOrderItemList(orderItemList);
 
         List<String> skuCodes = order.getOrderItemList().stream()
-                .map(orderItem -> orderItem.getSkuCode())
+                .map(OrderItem::getSkuCode)
                 .collect(Collectors.toList());
 
         ResponseObject response = webClient.get()
-                .uri("http://localhost:8082/inventory", uriBuilder -> uriBuilder.queryParam("skuCode", skuCodes).build())
+                .uri("http://localhost:8083/inventory", uriBuilder -> uriBuilder.queryParam("skuCode", skuCodes).build())
                         .retrieve()
                                 .bodyToMono(ResponseObject.class)
                                         .block();
 
-        List<InventoryResponse> inventoryResponses = ((List<Object>) response.getData())
-                .stream()
-                .map(obj -> objectMapper.convertValue(obj, InventoryResponse.class))
-                .collect(Collectors.toList());
+        if(response.getStatusCode() == 200){
+            List<InventoryResponse> inventoryResponses = ((List<Object>) response.getData())
+                    .stream()
+                    .map(obj -> objectMapper.convertValue(obj, InventoryResponse.class))
+                    .collect(Collectors.toList());
 
-        if(!verifyStock(inventoryResponses)){
-            throw new InvalidStockException();
-        }
+            if(!verifyStock(inventoryResponses)){
+                throw new InvalidStockException();
+            }
 
-        orderRepository.save(order);
+            orderItemRepository.saveAll(order.getOrderItemList());
+            orderRepository.save(order);
+        } else throw new IllegalArgumentException();
 
     }
 
@@ -80,10 +85,7 @@ public class DoOrderService {
         orderItem.setQuantity(orderItemDto.getQuantity());
         orderItem.setSkuCode(orderItemDto.getSkuCode());
 
-        orderItemRepository.save(orderItem);
-
         return orderItem;
-
     }
 
 }

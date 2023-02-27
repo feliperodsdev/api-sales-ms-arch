@@ -38,8 +38,8 @@ public class OrderController {
             }
             doOrderService.doOrder(doOrderDto);
             return response.ok("Order was did");
-        }catch(Exception e){
-            return response.serverError(e.getMessage());
+        }catch(IllegalAccessException e){
+            return response.serverError(e);
         }
     }
 
