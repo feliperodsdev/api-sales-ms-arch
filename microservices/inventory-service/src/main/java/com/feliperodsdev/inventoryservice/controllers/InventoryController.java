@@ -4,10 +4,9 @@ import com.feliperodsdev.inventoryservice.dtos.HttpResponse;
 import com.feliperodsdev.inventoryservice.services.IsInStockService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/inventory")
@@ -16,8 +15,8 @@ public class InventoryController {
     @Autowired
     private IsInStockService isInStockService;
 
-    @GetMapping("/{sku_code}")
-    public ResponseEntity<Object> isInStock(@PathVariable("sku_code") String skuCode){
+    @GetMapping
+    public ResponseEntity<Object> isInStock(@RequestParam List<String> skuCode){
         HttpResponse response = new HttpResponse();
         try {
             return response.ok(isInStockService.isInStock(skuCode));
