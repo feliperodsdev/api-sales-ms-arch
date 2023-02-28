@@ -16,20 +16,18 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@SuppressWarnings("ALL")
 @Service
 public class DoOrderService {
 
     @Autowired
     private ObjectMapper objectMapper;
-    @Autowired
-    private final WebClient webClient;
+    private final WebClient.Builder webClientBuilder;
     private final IOrderRepository orderRepository;
     private final OrderItemMySqlRepository orderItemRepository;
 
-    public DoOrderService(WebClient webClient, @Qualifier("OrderRepositoryMySql") IOrderRepository orderRepository, @Qualifier("OrderItemMySqlRepository") OrderItemMySqlRepository orderItemRepository) {
+    public DoOrderService(WebClient.Builder webClient, @Qualifier("OrderRepositoryMySql") IOrderRepository orderRepository, @Qualifier("OrderItemMySqlRepository") OrderItemMySqlRepository orderItemRepository) {
         this.orderRepository = orderRepository;
-        this.webClient = webClient;
+        this.webClientBuilder = webClient;
         this.orderItemRepository = orderItemRepository;
     }
 
@@ -48,12 +46,13 @@ public class DoOrderService {
                 .map(OrderItem::getSkuCode)
                 .collect(Collectors.toList());
 
-        ResponseObject response = webClient.get()
-                .uri("http://localhost:8083/inventory", uriBuilder -> uriBuilder.queryParam("skuCode", skuCodes).build())
+        ResponseObject response = webClientBuilder.build().get()
+                .uri("http://inventory-service/inventory", uriBuilder -> uriBuilder.queryParam("skuCode", skuCodes).build())
                         .retrieve()
                                 .bodyToMono(ResponseObject.class)
                                         .block();
 
+        assert response != null;
         if(response.getStatusCode() == 200){
             List<InventoryResponse> inventoryResponses = ((List<Object>) response.getData())
                     .stream()
@@ -72,8 +71,8 @@ public class DoOrderService {
 
     private boolean verifyStock(List<InventoryResponse> inventoryResponses) {
         int size = inventoryResponses.size();
-        for(int i = 0; i<size; ++i) {
-            if(inventoryResponses.get(i).isInStock() == false) return false;
+        for (InventoryResponse inventoryResponse : inventoryResponses) {
+            if (!inventoryResponse.isInStock()) return false;
         }
         return true;
     }
